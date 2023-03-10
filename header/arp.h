@@ -7,6 +7,10 @@
 #define ARP_REQUEST     0x0001
 #define ARP_RESPONSE    0x0002
 
+#define ETHERNET_HR     0x0001
+
+#define ARP_PRO_IPV4    0x0800  // Protocol address space
+
 
 struct arp_packet {
     unsigned short hrd;         // hardware address space

@@ -19,6 +19,18 @@
 
 #include "arp.h"
 
+static void process_arp_packet(struct arp_packet * arppacket)
+{
+    if (htons(arppacket->hrd) != ETHERNET_HR)
+    {
+        printf("process_arp_packet(): The hardware type is not suported\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("arp hdr: %x\n", htons(arppacket->hrd));
+}
+
+
 
 void handle_arp_packet(unsigned char * payload)
 {
@@ -30,7 +42,7 @@ void handle_arp_packet(unsigned char * payload)
     switch (op)
     {
         case ARP_REQUEST:
-            printf("ARP Request");
+            process_arp_packet(&arppacket);
             break;
 
         default:
@@ -40,9 +52,6 @@ void handle_arp_packet(unsigned char * payload)
 }
 
 /*
-?Do I have the hardware type in ar$hrd?
-Yes: (almost definitely)
-  [optionally check the hardware length ar$hln]
   ?Do I speak the protocol in ar$pro?
   Yes:
     [optionally check the protocol length ar$pln]
