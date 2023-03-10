@@ -19,7 +19,5 @@
 
 
 #define DEBUG         1
-#define BUFFER_SIZE  (4 * 1024)
-#define TAP_NAME     "tap0"
 
 #endif

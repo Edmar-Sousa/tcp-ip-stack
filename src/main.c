@@ -20,23 +20,11 @@
 
 int main()
 {
-    int fd = eth_alloc_tap(TAP_NAME);
-
-    char buffer[BUFFER_SIZE];
-    struct eth_frame ethframe;
+    eth_alloc_tap(TAP_NAME);
 
     while (1) {
-        ssize_t count = read(fd, buffer, BUFFER_SIZE);
-
-        if ( count < 0 )
-        {
-            printf("main(): Error read ethernet frame.\n");
-            return 1;
-        }
-
-        memcpy(&ethframe, buffer, sizeof(struct eth_frame));
-
-        eth_handle_packet(&ethframe);
+        struct eth_frame * ethframe = eth_read();
+        eth_handle_packet(ethframe);
     }
 
     return 0;

@@ -21,14 +21,26 @@
 
 #include "enlace.h"
 
+static int fd = -1;
+
+
+static void print_eth_frame(struct eth_frame * frame)
+{
+    printf("\nFRAME ETHERNET\nTYPE: %X\n", frame->eth_type);
+    PRINT_MAC(frame->dmac, "DEST");
+    PRINT_MAC(frame->smac, "SRC");
+    print("\n");
+}
+
+
 
 /**
  *    https://www.kernel.org/doc/Documentation/networking/tuntap.txt
  */
-int eth_alloc_tap(char *dev)
+void eth_alloc_tap(char *dev)
 {
     struct ifreq ifr;
-    int fd, err;
+    int err;
 
     if ( (fd = open("/dev/net/tap", O_RDWR)) < 0 )
     {
@@ -57,8 +69,6 @@ int eth_alloc_tap(char *dev)
     #ifdef DEBUG
     printf("TAP (%s): started\n", dev);
     #endif
-
-    return fd;
 }
 
 
@@ -69,6 +79,10 @@ void eth_handle_packet(struct eth_frame * ethframe)
     switch (frame_type)
     {
         case ETHER_TYPE_ARP:
+            #ifdef DEBUG
+            print_eth_frame(ethframe);
+            #endif
+
             handle_arp_packet(ethframe->payload);
             break;
         
@@ -84,4 +98,29 @@ void eth_handle_packet(struct eth_frame * ethframe)
             printf("ANY: Package not found \"%X\"\n", frame_type);
             break;
     }
+}
+
+
+struct eth_frame * eth_read()
+{
+    char buffer[BUFFER_SIZE];
+    struct eth_frame * frame = (struct eth_frame *) malloc(sizeof(struct eth_frame));
+
+    if ( frame == NULL )
+    {
+        free(frame);
+        printf("eth_read(): Error create frame\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ssize_t count = read(fd, buffer, BUFFER_SIZE);
+
+    if ( count < -1 ) 
+    {
+        printf("eth_read(): Error read frame\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memcpy(frame, buffer, sizeof(struct eth_frame));
+    return frame;
 }
