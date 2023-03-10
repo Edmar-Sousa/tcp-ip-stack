@@ -29,7 +29,7 @@ static void print_eth_frame(struct eth_frame * frame)
     printf("\nFRAME ETHERNET\nTYPE: %X\n", frame->eth_type);
     PRINT_MAC(frame->dmac, "DEST");
     PRINT_MAC(frame->smac, "SRC");
-    print("\n");
+    printf("\n");
 }
 
 
