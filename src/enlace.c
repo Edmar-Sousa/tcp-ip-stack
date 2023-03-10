@@ -124,3 +124,9 @@ struct eth_frame * eth_read()
     memcpy(frame, buffer, sizeof(struct eth_frame));
     return frame;
 }
+
+
+void eth_write(unsigned char * payload)
+{
+    
+}
