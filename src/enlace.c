@@ -21,69 +21,17 @@
 
 #include "enlace.h"
 
-static int fd = -1;
 
-
-static void print_eth_frame(struct eth_frame * frame)
-{
-    printf("\nFRAME ETHERNET\n");
-    PRINT_MAC(frame->dmac, "DEST");
-    PRINT_MAC(frame->smac, "SRC");
-    printf("\n");
-}
-
-
-
-/**
- *    https://www.kernel.org/doc/Documentation/networking/tuntap.txt
- */
-void eth_alloc_tap(char *dev)
-{
-    struct ifreq ifr;
-    int err;
-
-    if ( (fd = open("/dev/net/tap", O_RDWR)) < 0 )
-    {
-        printf("alloc_tap(): Error init tap device.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    memset(&ifr, 0, sizeof(ifr));
-
-    /**
-     *        IFF_TAP:   Packet with ethernet headers
-     *        IFF_TUN:   Packet without ethernet headers
-     *      IFF_NO_PI:   Do not provide packet information
-     */
-    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-
-    if ( *dev )
-        strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-
-    if ( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 )
-    {
-        printf("alloc_tap(): ioctl error.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    #ifdef DEBUG
-    printf("TAP (%s): started\n", dev);
-    #endif
-}
-
-
-void eth_handle_packet(struct eth_frame * ethframe)
+void eth_handle_packet(struct net_device * device, struct eth_frame * ethframe)
 {
     uint16_t frame_type = htons(ethframe->eth_type);
 
     switch (frame_type)
     {
         case ETHER_TYPE_ARP:
-            #ifdef DEBUG
-            print_eth_frame(ethframe);
-            #endif
-
-            handle_arp_packet(ethframe->payload);
+            eth_write(device->fd, ethframe);
+            arp_handle_packet(device, ethframe->payload);
+            eth_write(device->fd, ethframe);
             break;
         
         case ETHER_TYPE_IPV4:
@@ -101,32 +49,24 @@ void eth_handle_packet(struct eth_frame * ethframe)
 }
 
 
-struct eth_frame * eth_read()
+struct eth_frame * eth_read(int fd)
 {
     char buffer[BUFFER_SIZE];
-    struct eth_frame * frame = (struct eth_frame *) malloc(sizeof(struct eth_frame));
-
-    if ( frame == NULL )
-    {
-        free(frame);
-        printf("eth_read(): Error create frame\n");
-        exit(EXIT_FAILURE);
-    }
-
     ssize_t count = read(fd, buffer, BUFFER_SIZE);
 
     if ( count < -1 ) 
     {
         printf("eth_read(): Error read frame\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
-    memcpy(frame, buffer, sizeof(struct eth_frame));
+    struct eth_frame * frame = (struct eth_frame *) buffer;
     return frame;
 }
 
 
-void eth_write(unsigned char * payload)
+void eth_write(int fd, struct eth_frame * eth_frame)
 {
-    
+    struct arp_packet * arp = (struct arp_packet *) eth_frame->payload;
+    printf("ARP OP: %d\n", htons(arp->op));
 }

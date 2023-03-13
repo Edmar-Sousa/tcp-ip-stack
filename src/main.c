@@ -15,16 +15,20 @@
  * ============================================================
  */
 
+#include "device.h"
 #include "enlace.h"
 
 
 int main()
 {
-    eth_alloc_tap(TAP_NAME);
+    struct net_device * device = init_device("tap0", "10.0.0.0/25");
 
-    while (1) {
-        struct eth_frame * ethframe = eth_read();
-        eth_handle_packet(ethframe);
+    while (1)
+    {
+        struct eth_frame * frame = eth_read(device->fd);
+
+        if ( frame != NULL )
+            eth_handle_packet(device, frame);
     }
 
     return 0;

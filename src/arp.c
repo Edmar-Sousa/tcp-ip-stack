@@ -19,30 +19,44 @@
 
 #include "arp.h"
 
-static void process_arp_packet(struct arp_packet * arppacket)
-{
-    if (htons(arppacket->hrd) != ETHERNET_HR)
-    {
-        printf("process_arp_packet(): The hardware type is not suported\n");
-        exit(EXIT_FAILURE);
-    }
 
-    printf("arp hdr: %x\n", htons(arppacket->hrd));
+static unsigned char * arp_reply(struct net_device * device, struct arp_packet * arppacket)
+{
+    struct arp_ipv4 * ipv4_packet = (struct arp_ipv4 *) arppacket->payload;
+
+    strncpy(ipv4_packet->dmac, ipv4_packet->smac, 6);
+    ipv4_packet->dip = ipv4_packet->sip;
+
+    arppacket->op = htons(ARP_RESPONSE);
+
+    // update smac and sip from arp to device mac and ip
 }
 
 
-
-void handle_arp_packet(unsigned char * payload)
+void arp_handle_packet(struct net_device * device, unsigned char * payload)
 {
-    struct arp_packet arppacket;
-    memcpy(&arppacket, payload, sizeof(struct arp_packet));
+    struct arp_packet * arppacket = (struct arp_packet *) payload;
 
-    uint16_t op = htons(arppacket.op);
+    arppacket->op = htons(arppacket->op);
+    arppacket->hrd = htons(arppacket->hrd);
+    arppacket->pro = htons(arppacket->pro);
     
-    switch (op)
+    if (arppacket->hrd != ETHERNET_HR)
+    {
+        printf("process_arp_packet(): The hardware type is not suported\n");
+        return;
+    }
+
+    if (arppacket->pro != ARP_PRO_IPV4)
+    {
+        printf("process_arp_packet(): The protocol type is not suported\n");
+        return;
+    }
+
+    switch (arppacket->op)
     {
         case ARP_REQUEST:
-            process_arp_packet(&arppacket);
+            arp_reply(device, arppacket);
             break;
 
         default:

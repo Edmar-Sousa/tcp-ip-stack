@@ -2,7 +2,7 @@
 #define __TCP_IP_STACK_ARP__
 
 #include "common.h"
-
+#include "device.h"
 
 #define ARP_REQUEST     0x0001
 #define ARP_RESPONSE    0x0002
@@ -22,6 +22,14 @@ struct arp_packet {
 } __attribute__((packed));
 
 
-void handle_arp_packet(unsigned char * payload);
+struct arp_ipv4 {
+    unsigned char smac[6];
+    unsigned int sip;
+
+    unsigned char dmac[6];
+    unsigned int dip;
+} __attribute__((packed));
+
+void arp_handle_packet(struct net_device * device, unsigned char * payload);
 
 #endif
