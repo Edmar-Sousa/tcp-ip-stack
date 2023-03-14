@@ -58,15 +58,29 @@ static void alloc_tap_device(char * dev, int * fd)
 }
 
 
-struct net_device * init_device(char * name, unsigned char * ip)
+struct net_device * init_device(char * name, unsigned char * ip, unsigned char * mac)
 {
     struct net_device * device = (struct net_device *) malloc( sizeof(struct net_device) );
     strncpy(device->name, name, IFNAMSIZ);
+    
+    sscanf(
+        mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+        &device->mac[0],
+        &device->mac[1],
+        &device->mac[2],
+        &device->mac[3],
+        &device->mac[4],
+        &device->mac[5]
+    );
 
     alloc_tap_device( device->name, &device->fd );
 
+    if ( inet_pton(AF_INET, ip, &device->ip) )
+        printf("eth_init(): Error convert ip to binary ip\n");
+
     if ( system("ip link set dev tap0 up") != 0 )
         printf("eth_init(): Error set up\n");
+
 
     if ( system("ip route add dev tap0 10.0.0.0/25") != 0 )
         printf("eth_init(): Error set routing\n");

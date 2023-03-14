@@ -29,7 +29,8 @@ static unsigned char * arp_reply(struct net_device * device, struct arp_packet *
 
     arppacket->op = htons(ARP_RESPONSE);
 
-    // update smac and sip from arp to device mac and ip
+    strncpy(ipv4_packet->smac, device->mac, 6);
+    ipv4_packet->sip = device->ip;
 }
 
 

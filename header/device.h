@@ -11,6 +11,6 @@ struct net_device {
 };
 
 
-struct net_device * init_device(char * name, unsigned char * ip);
+struct net_device * init_device(char * name, unsigned char * ip, unsigned char * mac);
 
 #endif

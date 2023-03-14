@@ -24,7 +24,7 @@ struct eth_frame {
 
 struct eth_frame * eth_read(int fd);
 
-void eth_write(int fd, struct eth_frame * eth_frame);
+void eth_write(struct net_device * device, struct eth_frame * eth_frame);
 void eth_handle_packet(struct net_device * device, struct eth_frame * ethframe);
 
 #endif

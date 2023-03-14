@@ -21,7 +21,7 @@
 
 int main()
 {
-    struct net_device * device = init_device("tap0", "10.0.0.0/25");
+    struct net_device * device = init_device("tap0", "10.0.0.0/25", "1C:44:F5:AA:12:DD");
 
     while (1)
     {
