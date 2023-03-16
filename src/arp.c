@@ -27,10 +27,13 @@ static unsigned char * arp_reply(struct net_device * device, struct arp_packet *
     strncpy(ipv4_packet->dmac, ipv4_packet->smac, 6);
     ipv4_packet->dip = ipv4_packet->sip;
 
-    arppacket->op = htons(ARP_RESPONSE);
+    arppacket->op = ntohs(ARP_RESPONSE);
 
     strncpy(ipv4_packet->smac, device->mac, 6);
     ipv4_packet->sip = device->ip;
+
+    arppacket->hrd = ntohs(arppacket->hrd);
+    arppacket->pro = ntohs(arppacket->pro);
 }
 
 
@@ -41,7 +44,7 @@ void arp_handle_packet(struct net_device * device, unsigned char * payload)
     arppacket->op = htons(arppacket->op);
     arppacket->hrd = htons(arppacket->hrd);
     arppacket->pro = htons(arppacket->pro);
-    
+
     if (arppacket->hrd != ETHERNET_HR)
     {
         printf("process_arp_packet(): The hardware type is not suported\n");

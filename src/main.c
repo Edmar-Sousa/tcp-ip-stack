@@ -21,11 +21,14 @@
 
 int main()
 {
-    struct net_device * device = init_device("tap0", "10.0.0.0/25", "1C:44:F5:AA:12:DD");
+    struct net_device * device = init_device("tap0", "10.0.0.6", "1C:44:F5:AA:12:DD");
+
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
 
     while (1)
     {
-        struct eth_frame * frame = eth_read(device->fd);
+        struct eth_frame * frame = eth_read(device->fd, buffer);
 
         if ( frame != NULL )
             eth_handle_packet(device, frame);

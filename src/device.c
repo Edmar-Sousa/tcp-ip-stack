@@ -75,14 +75,13 @@ struct net_device * init_device(char * name, unsigned char * ip, unsigned char *
 
     alloc_tap_device( device->name, &device->fd );
 
-    if ( inet_pton(AF_INET, ip, &device->ip) )
+    if ( inet_pton(AF_INET, ip, &device->ip) != 1 )
         printf("eth_init(): Error convert ip to binary ip\n");
 
     if ( system("ip link set dev tap0 up") != 0 )
         printf("eth_init(): Error set up\n");
-
-
-    if ( system("ip route add dev tap0 10.0.0.0/25") != 0 )
+    
+    if ( system("ip route add 10.0.0.0/24 dev tap0") != 0 )
         printf("eth_init(): Error set routing\n");
     
     return device;

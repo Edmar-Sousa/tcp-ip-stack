@@ -48,12 +48,9 @@ void eth_handle_packet(struct net_device * device, struct eth_frame * ethframe)
 }
 
 
-struct eth_frame * eth_read(int fd)
+struct eth_frame * eth_read(int fd, char * buf)
 {
-    char buffer[BUFFER_SIZE];
-    memset(buffer, 0, BUFFER_SIZE);
-
-    ssize_t count = read(fd, buffer, BUFFER_SIZE);
+    ssize_t count = read(fd, buf, BUFFER_SIZE);
 
     if ( count < -1 ) 
     {
@@ -61,7 +58,7 @@ struct eth_frame * eth_read(int fd)
         return NULL;
     }
 
-    struct eth_frame * frame = (struct eth_frame *) buffer;
+    struct eth_frame * frame = (struct eth_frame *) buf;
     return frame;
 }
 
@@ -71,27 +68,7 @@ void eth_write(struct net_device * device, struct eth_frame * ethframe)
     strncpy(ethframe->dmac, ethframe->smac, 6);
     strncpy(ethframe->smac, device->mac, 6);
 
-    ethframe->eth_type = ETHER_TYPE_ARP;
-
-    printf("SMAC: %02X:%02X:%02X:%02X:%02X:%02X\n", 
-        ethframe->smac[0],
-        ethframe->smac[1],
-        ethframe->smac[2],
-        ethframe->smac[3],
-        ethframe->smac[4],
-        ethframe->smac[5]
-    );
-
-    printf("DMAC: %02X:%02X:%02X:%02X:%02X:%02X\n", 
-        ethframe->dmac[0],
-        ethframe->dmac[1],
-        ethframe->dmac[2],
-        ethframe->dmac[3],
-        ethframe->dmac[4],
-        ethframe->dmac[5]
-    );
-
-    printf("OP: %X\n", ethframe->eth_type);
+    ethframe->eth_type = ntohs(ethframe->eth_type);
 
     if ( write(device->fd, (char *) ethframe, BUFFER_SIZE) < 0 )
         printf("eth_write(): Error write frame\n");
