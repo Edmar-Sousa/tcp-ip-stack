@@ -26,7 +26,7 @@ void eth_handle_packet(struct net_device * device, struct eth_frame * ethframe)
 {
     ethframe->eth_type = htons(ethframe->eth_type);
 
-    switch (ethframe->eth_type)
+    switch ( ethframe->eth_type )
     {
         case ETHER_TYPE_ARP:
             arp_handle_packet(device, ethframe->payload);

@@ -26,7 +26,7 @@ int main()
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, BUFFER_SIZE);
 
-    while (1)
+    while ( 1 )
     {
         struct eth_frame * frame = eth_read(device->fd, buffer);
 

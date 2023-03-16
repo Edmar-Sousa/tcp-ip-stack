@@ -12,6 +12,8 @@
 #define ARP_PRO_IPV4    0x0800  // Protocol address space
 
 
+#define ARP_TABLE_LENGHT     5
+
 struct arp_packet {
     unsigned short hrd;         // hardware address space
     unsigned short pro;         // protocol address space
@@ -29,6 +31,12 @@ struct arp_ipv4 {
     unsigned char dmac[6];
     unsigned int dip;
 } __attribute__((packed));
+
+struct arp_table_entry {
+    unsigned int ip;
+    unsigned char mac[6];
+
+};
 
 void arp_handle_packet(struct net_device * device, unsigned char * payload);
 

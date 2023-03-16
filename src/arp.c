@@ -19,11 +19,40 @@
 
 #include "arp.h"
 
+struct arp_table_entry table[ARP_TABLE_LENGHT];
 
-static unsigned char * arp_reply(struct net_device * device, struct arp_packet * arppacket)
+
+static int arp_table_insert(struct arp_ipv4 * ipv4_packet)
 {
-    struct arp_ipv4 * ipv4_packet = (struct arp_ipv4 *) arppacket->payload;
+    for ( struct arp_table_entry * entry = table; entry < &table[ARP_TABLE_LENGHT]; entry++ )
+        if ( !entry->ip )
+        {
+            entry->ip = ipv4_packet->sip;
+            strncpy(entry->mac, ipv4_packet->smac, 6);
 
+            return 0;
+        }
+    
+
+    return 1;
+}
+
+
+static int arp_table_check(struct arp_ipv4 * ipv4_packet) 
+{
+    for ( struct arp_table_entry * entry = table; entry < &table[ARP_TABLE_LENGHT]; entry++ )
+        if ( entry->ip == ipv4_packet->sip )
+        {
+            strncpy(entry->mac, ipv4_packet->smac, 6);
+            return 1;
+        }
+    
+    return 0;
+}
+
+
+static unsigned char * arp_reply(struct net_device * device, struct arp_packet * arppacket, struct arp_ipv4 * ipv4_packet)
+{
     strncpy(ipv4_packet->dmac, ipv4_packet->smac, 6);
     ipv4_packet->dip = ipv4_packet->sip;
 
@@ -40,55 +69,47 @@ static unsigned char * arp_reply(struct net_device * device, struct arp_packet *
 void arp_handle_packet(struct net_device * device, unsigned char * payload)
 {
     struct arp_packet * arppacket = (struct arp_packet *) payload;
+    struct arp_ipv4 * ipv4_packet = (struct arp_ipv4 *) arppacket->payload;
 
     arppacket->op = htons(arppacket->op);
     arppacket->hrd = htons(arppacket->hrd);
     arppacket->pro = htons(arppacket->pro);
 
-    if (arppacket->hrd != ETHERNET_HR)
+    if ( arppacket->hrd != ETHERNET_HR )
     {
         printf("process_arp_packet(): The hardware type is not suported\n");
         return;
     }
 
-    if (arppacket->pro != ARP_PRO_IPV4)
+    if ( arppacket->pro != ARP_PRO_IPV4 )
     {
         printf("process_arp_packet(): The protocol type is not suported\n");
         return;
     }
 
-    switch (arppacket->op)
+    if ( ipv4_packet->dip != device->ip )
     {
-        case ARP_REQUEST:
-            arp_reply(device, arppacket);
+        printf("process_arp_packet(): Operation not suported\n");
+        return;
+    }
+
+    int merge_flag = arp_table_check(ipv4_packet);
+
+    if ( !merge_flag && arp_table_insert(ipv4_packet) )
+    {
+        printf("process_arp_packet(): Error add entry on arp table\n");
+        return;
+    }
+
+    switch ( arppacket->op )
+    {
+        case ARP_REQUEST: {
+            arp_reply(device, arppacket, ipv4_packet);
             break;
+        }
 
         default:
             printf("ARP opcode invalid\n");
             break;
     }
 }
-
-/*
-  ?Do I speak the protocol in ar$pro?
-  Yes:
-    [optionally check the protocol length ar$pln]
-    Merge_flag := false
-    If the pair <protocol type, sender protocol address> is
-        already in my translation table, update the sender
-        hardware address field of the entry with the new
-        information in the packet and set Merge_flag to true.
-    ?Am I the target protocol address?
-    Yes:
-      If Merge_flag is false, add the triplet <protocol type,
-          sender protocol address, sender hardware address> to
-          the translation table.
-      ?Is the opcode ares_op$REQUEST?  (NOW look at the opcode!!)
-      Yes:
-        Swap hardware and protocol fields, putting the local
-            hardware and protocol addresses in the sender fields.
-        Set the ar$op field to ares_op$REPLY
-        Send the packet to the (new) target hardware address on
-            the same hardware on which the request was received. */
-
-
