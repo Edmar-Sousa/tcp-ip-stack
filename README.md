@@ -27,6 +27,12 @@ sudo main
 
 # Em um outro terminal gere trafego ARP com o comando
 arping -I tap0 10.0.0.6
+
+# Resultado 
+ARPING 10.0.0.6 from [you ip] tap0
+Unicast reply from 10.0.0.6 [1C:44:F5:AA:12:DD]
+Unicast reply from 10.0.0.6 [1C:44:F5:AA:12:DD]
+Unicast reply from 10.0.0.6 [1C:44:F5:AA:12:DD]
 ```
 
 ## Author
